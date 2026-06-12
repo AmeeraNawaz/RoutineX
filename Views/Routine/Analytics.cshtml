@@ -1,0 +1,143 @@
+﻿@model List<samplecrud.Models.RoutineTask>
+
+@{
+    var today = DateTime.Today;
+
+    var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
+    var weeklyData = new int[7];
+
+    var monthlyData = new int[4];
+    var yearlyData = new int[12];
+
+    foreach (var task in Model)
+    {
+        var taskDate = task.DueDateTime.Date;
+
+        if (task.Status == "Completed")
+        {
+            if (taskDate >= weekStart && taskDate < weekStart.AddDays(7))
+            {
+                var dayIndex = (int)taskDate.DayOfWeek - 1;
+                if (dayIndex < 0) dayIndex = 6;
+                weeklyData[dayIndex]++;
+            }
+
+            if (taskDate.Month == today.Month && taskDate.Year == today.Year)
+            {
+                var weekNumber = (taskDate.Day - 1) / 7;
+                if (weekNumber < 4) monthlyData[weekNumber]++;
+            }
+
+            if (taskDate.Year == today.Year)
+            {
+                yearlyData[taskDate.Month - 1]++;
+            }
+        }
+    }
+}
+
+@{
+    ViewData["Title"] = "Analytics";
+}
+
+<div class="analytics-page">
+
+    <h1 class="analytics-title">
+        Productivity Analysis
+    </h1>
+
+    <div class="analytics-graph-card">
+
+        <div class="analysis-tabs">
+            <button onclick="updateChart('weekly')">Weekly</button>
+            <button onclick="updateChart('monthly')">Monthly</button>
+            <button onclick="updateChart('yearly')">Yearly</button>
+        </div>
+
+        <canvas id="analyticsChart"></canvas>
+
+    </div>
+    
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('analyticsChart');
+
+    const chartData = {
+        weekly: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            data: [@string.Join(",", weeklyData)]
+        },
+        monthly: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            data: [@string.Join(",", monthlyData)]
+        },
+        yearly: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            data: [@string.Join(",", yearlyData)]
+        }
+    };
+
+    const analyticsChart = new Chart(ctx, {
+        type: 'line',
+
+        data: {
+            labels: chartData.weekly.labels,
+
+            datasets: [{
+                label: 'Completed Tasks',
+                data: chartData.weekly.data,
+                borderColor: '#22d3ee',
+                backgroundColor: 'transparent',
+                borderWidth: 4,
+                tension: 0.45,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#67e8f9',
+                pointBorderColor: '#22d3ee',
+                pointBorderWidth: 2
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#e2e8f0',
+                        usePointStyle: true,
+                        pointStyle: 'line'
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#cbd5e1' },
+                    border: { color: '#94a3b8' }
+                },
+
+                y: {
+                    beginAtZero: true,
+                    grid: { display: false },
+                    ticks: {
+                        color: '#cbd5e1',
+                        stepSize: 1
+                    },
+                    border: { color: '#94a3b8' }
+                }
+            }
+        }
+    });
+
+    function updateChart(type) {
+        analyticsChart.data.labels = chartData[type].labels;
+        analyticsChart.data.datasets[0].data = chartData[type].data;
+        analyticsChart.update();
+    }
+</script>

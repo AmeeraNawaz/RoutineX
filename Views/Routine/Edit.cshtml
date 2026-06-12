@@ -1,0 +1,57 @@
+﻿@model samplecrud.Models.RoutineTask
+
+<h2 class="text-center mt-4">Edit Routine</h2>
+<div class="card p-4 shadow form-card">
+    <form method="post">
+
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Task Name</label>
+            <input class="form-control" asp-for="TaskName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Due Date & Time</label>
+            <input type="datetime-local" class="form-control" asp-for="DueDateTime" />
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">Category</label>
+
+            <select class="form-control" asp-for="Category">
+
+                <option>Study</option>
+                <option>Health</option>
+                <option>Work</option>
+                <option>Personal</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <select class="form-control" asp-for="Priority">
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+
+            <select class="form-control" asp-for="Status">
+                <option>Pending</option>
+                <option>Completed</option>
+            </select>
+        </div>
+
+        <button class="glass-btn save-btn" type="submit">
+            Update
+        </button>
+
+    </form>
+    </div>

@@ -1,0 +1,465 @@
+﻿@model List<samplecrud.Models.RoutineTask>
+
+<div class="dashboard-wrapper">
+    @{
+        var hour = DateTime.Now.Hour;
+        var greeting = "";
+
+        if (hour < 12)
+        {
+            greeting = "Good Morning ☀️";
+        }
+        else if (hour < 17)
+        {
+            greeting = "Good Afternoon 🌤️";
+        }
+        else
+        {
+            greeting = "Good Evening 🌙";
+        }
+    }
+
+    <div class="hero-header">
+        <h1>@greeting</h1>
+        <p>Stay productive and keep your streak alive.</p>
+    </div>
+
+    @{
+        var streak = Model.Count(t => t.Status == "Completed") > 0 ? 1 : 0;
+    }
+
+    <div class="streak-box">
+        🔥
+        <span>
+            @(streak == 0 ? "Start Your Streak" : streak + " Day Streak")
+        </span>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="glass-toast">
+            ✓ @TempData["Message"]
+        </div>
+    }
+
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="searchText" class="form-control" placeholder="Search tasks..." />
+            <button class="btn btn-dark" type="submit">Search</button>
+            <a class="btn btn-secondary" href="/Routine/Index">Clear</a>
+        </div>
+    </form>
+
+    <div class="mb-4 d-flex flex-wrap gap-3">
+
+        <a class="glass-btn blue-glow"
+           href="/Routine/Index">
+            All
+        </a>
+
+        <a class="glass-btn yellow-glow"
+           href="/Routine/Index?filter=Pending">
+            Pending
+        </a>
+
+        <a class="glass-btn green-glow"
+           href="/Routine/Index?filter=Completed">
+            Completed
+        </a>
+
+        <a class="glass-btn red-glow"
+           href="/Routine/Index?filter=High">
+            High Priority
+        </a>
+
+        <a class="btn glass-filter-btn soft-red-glow" href="/Routine/Index?filter=Overdue">
+            Overdue
+        </a>
+
+        <a class="btn glass-filter-btn blue-glow" href="/Routine/Index?sortOrder=name">
+            Sort Name
+        </a>
+
+        <a class="btn glass-filter-btn purple-glow" href="/Routine/Index?sortOrder=priority">
+            Sort Priority
+        </a>
+
+        <a class="btn glass-filter-btn cyan-glow" href="/Routine/Index?sortOrder=date">
+            Sort Date
+        </a>
+
+    </div>
+
+    <div class="action-row">
+        <a class="glass-btn blue-solid" href="/Routine/Create">Add New Routine</a>
+    </div>
+
+    <div class="stats-grid mb-4">
+
+        <div class="card text-white bg-primary shadow stat-card">
+            <div class="stat-left">
+                <h5>Total Tasks</h5>
+                <h2>@Model.Count</h2>
+            </div>
+
+            <div class="stat-right total-icon">
+                <i class="bi bi-list-task"></i>
+            </div>
+        </div>
+
+        <div class="card text-white bg-success shadow stat-card">
+            <div class="stat-left">
+                <h5>Completed</h5>
+                <h2>@Model.Count(t => t.Status == "Completed")</h2>
+            </div>
+
+            <div class="stat-right completed-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+        </div>
+
+        <div class="card text-white bg-warning shadow stat-card">
+            <div class="stat-left">
+                <h5>Pending</h5>
+                <h2>@Model.Count(t => t.Status == "Pending")</h2>
+            </div>
+
+            <div class="stat-right pending-icon">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    @{
+        var total = Model.Count;
+        var completed = Model.Count(t => t.Status == "Completed");
+        var percent = total == 0 ? 0 : (completed * 100 / total);
+
+        var pendingCount = Model.Count(t => t.Status == "Pending");
+        var highPending = Model.Count(t => t.Status == "Pending" && t.Priority == "High");
+        var overdueCount = Model.Count(t => t.Status == "Pending" && t.DueDateTime.Date < DateTime.Today);
+
+        var coachMessage = "";
+
+        if (overdueCount > 0)
+        {
+            coachMessage = "You have overdue tasks. Clear them first to reduce backlog.";
+        }
+        else if (highPending > 0)
+        {
+            coachMessage = "Focus on high priority pending tasks first.";
+        }
+        else if (pendingCount == 0 && total > 0)
+        {
+            coachMessage = "Perfect! All tasks are completed today.";
+        }
+        else if (percent >= 70)
+        {
+            coachMessage = "Great progress. Finish the remaining tasks calmly.";
+        }
+        else
+        {
+            coachMessage = "Start with one small task to build momentum.";
+        }
+
+        var highCount = Model.Count(t => t.Priority == "High");
+        var mediumCount = Model.Count(t => t.Priority == "Medium");
+        var lowCount = Model.Count(t => t.Priority == "Low");
+
+        var priorityTotal = highCount + mediumCount + lowCount;
+
+        var highDeg = priorityTotal == 0 ? 0 : (highCount * 360 / priorityTotal);
+        var mediumDeg = priorityTotal == 0 ? 0 : (mediumCount * 360 / priorityTotal);
+        var lowDeg = 360 - highDeg - mediumDeg;
+
+        var weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
+
+        var weeklyData = new int[7];
+
+        foreach (var task in Model)
+        {
+            var taskDate = task.DueDateTime.Date;
+
+            if (task.Status == "Completed" &&
+                taskDate >= weekStart &&
+                taskDate < weekStart.AddDays(7))
+            {
+                var dayIndex = (int)taskDate.DayOfWeek - 1;
+
+                if (dayIndex < 0)
+                {
+                    dayIndex = 6;
+                }
+
+                weeklyData[dayIndex]++;
+            }
+        }
+
+
+        }
+
+<div class="progress-card mb-4">
+
+    <div class="analytics-layout">
+
+        <!-- Completion Ring -->
+        <div class="progress-ring"
+             style="--percent:@percent">
+
+            <div class="progress-inner">
+                <h3>@percent%</h3>
+                <span>Completed</span>
+            </div>
+
+        </div>
+
+        <!-- Right Side -->
+        <div class="analytics-content">
+
+            <div class="analytics-text">
+                <h5>Daily Completion</h5>
+                <p>@completed of @total tasks completed</p>
+            </div>
+
+            <div class="priority-section">
+
+                <!-- Priority Ring -->
+                <div class="priority-donut"
+                     style="--high:@highDeg; --medium:@mediumDeg; --low:@lowDeg;">
+
+                    <div class="priority-inner">
+                        <span>Priority</span>
+                    </div>
+
+                </div>
+
+                <!-- Priority Stats -->
+                <div class="priority-points">
+
+                    <div>
+                        <span class="spark high-spark"></span>
+                        High Priority : @highCount
+                    </div>
+
+                    <div>
+                        <span class="spark medium-spark"></span>
+                        Medium Priority : @mediumCount
+                    </div>
+
+                    <div>
+                        <span class="spark low-spark"></span>
+                        Low Priority : @lowCount
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <a href="/Routine/Analytics" class="mini-graph-widget">
+        <h5>Productivity Trend</h5>
+        <canvas id="streakChart"></canvas>
+    </a>
+
+
+</div>
+
+<div class="coach-card">
+    <div>
+        <h3>Smart Focus Coach</h3>
+        <p>@coachMessage</p>
+    </div>
+
+    <div class="coach-icon">
+        <i class="bi bi-stars"></i>
+    </div>
+</div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state">
+            <h3>No routines yet ✨</h3>
+            <p>Start building your day by adding your first routine.</p>
+
+            <a class="glass-btn blue-solid" href="/Routine/Create">
+                Add First Routine
+            </a>
+        </div>
+    }
+    else
+    {
+
+        <table class="table table-bordered table-striped">
+            <tr>
+                <th>Task</th>
+                <th>Time</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            @foreach (var task in Model)
+            {
+                <tr>
+                    <td>@task.TaskName</td>
+                    <td>@task.DueDateTime.ToString("hh:mm tt")</td>
+                    <td><span class="glass-badge cyan-badge">@task.Category</span></td>
+
+                    <td>
+                        @if (task.Priority == "High")
+                        {
+                            <span class="glass-badge red-badge">High</span>
+                        }
+                        else if (task.Priority == "Medium")
+                        {
+                            <span class="glass-badge yellow-badge">Medium</span>
+                        }
+                        else
+                        {
+                            <span class="glass-badge green-badge">Low</span>
+                        }
+                    </td>
+
+                    <td>
+                        @task.DueDateTime.ToString("yyyy-MM-dd")
+                        @if (task.DueDateTime.Date == DateTime.Today)
+                        {
+                            <span class="today-badge">Today</span>
+                        }
+                        @if (task.Status == "Pending" && task.DueDateTime < DateTime.Now)
+                        {
+                            <span class="overdue-badge">Overdue</span>
+                        }
+                        else if (task.DueDateTime.Date == DateTime.Today)
+                        {
+                            <span class="today-badge">Today</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (task.Status == "Completed")
+                        {
+                            <span class="status-badge status-completed">Completed</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-pending">Pending</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a class="glass-btn yellow-glow btn-sm" href="/Routine/Edit/@task.Id">Edit</a>
+                        <a class="glass-btn red-glow btn-sm"
+                           href="/Routine/Delete/@task.Id"
+                           onclick="return confirm('Are you sure you want to delete this task?');">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </table>
+    }
+</div>
+
+<script>const ctx = document.getElementById('streakChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'line',
+
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+
+            datasets: [{
+                label: 'Completed Tasks',
+                data: [@string.Join(",", weeklyData)],
+
+                borderColor: '#22d3ee',
+                backgroundColor: '#22d3ee',
+
+                borderWidth: 4,
+                tension: 0.35,
+                fill: false,
+
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#e0faff',
+                pointBorderColor: '#22d3ee',
+                pointBorderWidth: 3,
+                pointStyle: 'circle'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#dbeafe',
+                        usePointStyle: true,
+                        pointStyle: 'line',
+                        boxWidth: 45,
+                        font: {
+                            size: 15,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#dbeafe',
+                        font: { size: 14 }
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: 'rgba(147,197,253,0.7)',
+                        width: 2
+                    }
+                },
+
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#dbeafe',
+                        stepSize: 1,
+                        font: { size: 14 }
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: 'rgba(147,197,253,0.7)',
+                        width: 2
+                    }
+                }
+            }
+        },
+
+        plugins: [{
+            id: 'neonGlow',
+            beforeDatasetDraw(chart) {
+                const { ctx } = chart;
+                ctx.save();
+                ctx.shadowColor = '#22d3ee';
+                ctx.shadowBlur = 18;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            },
+            afterDatasetDraw(chart) {
+                chart.ctx.restore();
+            }
+        }]
+    });</script>

@@ -1,0 +1,98 @@
+﻿@model samplecrud.Models.RoutineTask
+
+<h2 class="text-center mt-4">Add Routine</h2>
+<div class="voice-section">
+
+    <button type="button"
+            id="startVoice"
+            class="voice-btn">
+        🎤 Speak Task
+    </button>
+
+    <textarea id="voiceOutput"
+              class="form-control mt-3"
+              rows="3"
+              placeholder="Your spoken task will appear here...">
+    </textarea>
+
+</div>
+<div class="card p-4 shadow form-card">
+
+    <form method="post">
+        <div class="mb-3">
+            <label>Task Name</label>
+            <input class="form-control" asp-for="TaskName" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Due Date & Time</label>
+            <input type="datetime-local" class="form-control" asp-for="DueDateTime" />
+        </div>
+
+        <div class="mb-3">
+
+            <label>Category</label>
+
+            <select class="form-control" asp-for="Category">
+
+                <option>Study</option>
+                <option>Health</option>
+                <option>Work</option>
+                <option>Personal</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+            <label>Priority</label>
+            <select class="form-control" asp-for="Priority">
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select class="form-control" asp-for="Status">
+                <option>Pending</option>
+                <option>Completed</option>
+            </select>
+        </div>
+
+        <button class="glass-btn save-btn" type="submit">
+            Save
+        </button>
+    </form>
+
+    <script>const startVoice =
+document.getElementById("startVoice");
+
+const voiceOutput =
+document.getElementById("voiceOutput");
+
+if ('webkitSpeechRecognition' in window)
+{
+    const recognition =
+    new webkitSpeechRecognition();
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+    recognition.lang = "en-US";
+
+    startVoice.addEventListener("click", () =>
+    {
+        recognition.start();
+    });
+
+    recognition.onresult = function(event)
+    {
+        voiceOutput.value =
+        event.results[0][0].transcript;
+    };
+}</script>
+
+</div>
